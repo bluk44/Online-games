@@ -1,0 +1,112 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/security
+           http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+	<!-- responsible for storing security context between requests -->
+	<beans:bean id="securityContextFilter"
+		class="org.springframework.security.web.context.SecurityContextPersistenceFilter">
+		<beans:property name="securityContextRepository" ref="securityContextRepository" />
+	</beans:bean>
+
+	<beans:bean id="securityContextRepository"
+		class="org.springframework.security.web.context.HttpSessionSecurityContextRepository" />
+
+	<!-- applies the configured security constraints to incoming requests. -->
+	<beans:bean id="filterSecurityInterceptor"
+		class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
+		<beans:property name="securityMetadataSource">
+			<filter-security-metadata-source>
+				<intercept-url pattern="/secure/extreme/*" access="ROLE_SUPERVISOR" />
+				<intercept-url pattern="/secure/**" access="IS_AUTHENTICATED_FULLY" />
+				<intercept-url pattern="/login.htm" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+				<intercept-url pattern="/**" access="ROLE_USER" />
+			</filter-security-metadata-source>
+		</beans:property>
+		<beans:property name="authenticationManager" ref="authManager" />
+		<beans:property name="accessDecisionManager" ref="accessDecisionManager" />
+	</beans:bean>
+
+	<authentication-manager id="authManager">
+		<authentication-provider>
+			<user-service>
+				<user name="jimi" password="jimispassword" authorities="ROLE_USER, ROLE_ADMIN" />
+				<user name="bob" password="bobspassword" authorities="ROLE_USER" />
+			</user-service>
+		</authentication-provider>
+	</authentication-manager>
+
+	<beans:bean id="accessDecisionManager"
+		class="org.springframework.security.access.vote.AffirmativeBased">
+		<beans:property name="decisionVoters">
+			<beans:list>
+				<beans:bean class="org.springframework.security.access.vote.RoleVoter" />
+				<beans:bean
+					class="org.springframework.security.access.vote.AuthenticatedVoter" />
+			</beans:list>
+		</beans:property>
+	</beans:bean>
+
+	<!-- responsible for processing a submitted login form (it's created by 
+		the <form-login> namespace element). -->
+	<beans:bean id="formLoginFilter"
+		class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">
+		<beans:property name="authenticationManager" ref="authManager" />
+		<beans:property name="authenticationSuccessHandler">
+			<beans:bean
+				class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
+				<beans:property name="defaultTargetUrl" value="/" />
+			</beans:bean>
+		</beans:property>
+		<beans:property name="sessionAuthenticationStrategy">
+			<beans:bean
+				class="org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy" />
+		</beans:property>
+	</beans:bean>
+
+	<!-- session authentication strategy -->
+	<beans:bean id="sessionAuthenticationStrategy"
+		class="org.springframework.security.web.authentication.session.ConcurrentSessionControlStrategy">
+		<beans:constructor-arg name="sessionRegistry"
+			ref="sessionRegistry" />
+		<beans:property name="maximumSessions" value="1" />
+	</beans:bean>
+
+	<beans:bean id="sessionRegistry"
+		class="org.springframework.security.core.session.SessionRegistryImpl" />
+
+	<!-- responsible for processing a logout link -->
+	<beans:bean id="logoutFilter"
+		class="org.springframework.security.web.authentication.logout.LogoutFilter">
+		<beans:constructor-arg value="/logout" />
+		<beans:constructor-arg>
+			<beans:list>
+				<beans:bean
+					class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler" />
+			</beans:list>
+		</beans:constructor-arg>
+	</beans:bean>
+
+	<!-- responsible for populating the security context for anonymous users -->
+	<beans:bean id="anonFilter"
+		class="org.springframework.security.web.authentication.AnonymousAuthenticationFilter">
+		<beans:property name="key" value="SomeUniqueKeyForThisApplication" />
+		<beans:property name="userAttribute" value="anonymousUser,ROLE_ANONYMOUS" />
+	</beans:bean>
+
+	<!-- needed for concurrent session control -->
+	<beans:bean id="sessionMgmtFilter"
+		class="org.springframework.security.web.session.SessionManagementFilter">
+		<beans:constructor-arg ref="securityContextRepository" />
+	</beans:bean>
+
+	<!-- It allows you to query whether the current user is allowed to invoke 
+		a particular URL. -->
+	<beans:bean id="webPrivilegeEvaluator"
+		class="org.springframework.security.web.access.DefaultWebInvocationPrivilegeEvaluator">
+		<beans:constructor-arg ref="filterSecurityInterceptor" />
+	</beans:bean>
+
+</beans:beans>
