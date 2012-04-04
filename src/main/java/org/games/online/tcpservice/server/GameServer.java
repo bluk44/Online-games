@@ -1,104 +1,114 @@
 package org.games.online.tcpservice.server;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.Executors;
 
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.games.online.events.PlayerConnectedEvent;
+import org.games.online.message.Message;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.ChannelGroupFuture;
-import org.jboss.netty.channel.group.DefaultChannelGroup;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.springframework.context.ApplicationListener;
 
-import protocol.Message;
-import protocol.PlayersInRoom;
-import protocol.PlayerConnected;
-import chat.PlayerObject;
-import chat.Room;
+public class GameServer implements ApplicationListener<PlayerConnectedEvent> {
+	protected int port = 10000;
 
-public class GameServer {
-	private static int DEFAULT_PORT = 10000;
-	private ChannelFactory channelFactory;
-	private ServerBootstrap serverBootstrap;
-	private Room chatRoom = new Room("BDSM");
+	/**
+	 * a channel which accepts connections from the clients
+	 */
+	protected Channel serverChannel;
+	/**
+	 * a factory which creates and manages channels and it's resources processes
+	 * all I/O requests and performs I/O to generate ChannelEvents
+	 */
+	protected ChannelFactory channelFactory;
+	/**
+	 * Whenever a new connection is accepted by the server, a new
+	 * ChannelPipeline will be created by the specified ChannelPipelineFactory.
+	 */
+	protected ChannelPipelineFactory channelPipelineFactory;
+	/**
+	 * channel group of logged players
+	 */
+	protected ChannelGroup authenticatedChannels;
+	/**
+	 * channel group of newly connected players
+	 */
+	protected ChannelGroup anonymousChannels;
+	/**
+	 * a helper class which sets up the server
+	 */
+	protected ServerBootstrap serverBootstrap;
 
-	public static final ChannelGroup allChannels = new DefaultChannelGroup("all clients");
-	public static final ChannelGroup awaiting = new DefaultChannelGroup("awaiting");
-	private Logger logger = Logger.getLogger(getClass());
+	protected Logger logger = Logger.getLogger("chuj");
+
+	public GameServer(ChannelFactory channelFactory,
+			ChannelPipelineFactory channelPipelineFactory,
+			ChannelGroup authenticatedChannels, ChannelGroup anonymousChannels,
+			ServerBootstrap serverBootstrap) {
+		this.channelFactory = channelFactory;
+		this.channelPipelineFactory = channelPipelineFactory;
+		this.authenticatedChannels = authenticatedChannels;
+		this.anonymousChannels = anonymousChannels;
+		this.serverBootstrap = serverBootstrap;
+		
+	}
 
 	public void start() {
-		channelFactory = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
 
-		serverBootstrap = new ServerBootstrap(channelFactory);
-		serverBootstrap.setPipelineFactory(new GameServerPipelineFactory(this));
+		serverBootstrap.setPipelineFactory(channelPipelineFactory);
 		serverBootstrap.setOption("child.tcpNoDelay", true);
 		serverBootstrap.setOption("child.keepAlive", true);
 
-		Channel serverChannel = serverBootstrap.bind(new InetSocketAddress(DEFAULT_PORT));
-		logger.info("server started");
-
-		// allChannels.add(serverChannel);
+		serverChannel = serverBootstrap.bind(new InetSocketAddress(port));
+		logger.info("starting tcp server on port " + port);
 	}
 
 	public void stop() {
 		logger.info("stopping server");
-		ChannelGroupFuture closeFuture = allChannels.close();
+		ChannelGroupFuture closeFuture = authenticatedChannels.close();
 		closeFuture.awaitUninterruptibly();
 		channelFactory.releaseExternalResources();
-		logger.info("server stopped");
+		ChannelGroupFuture close = anonymousChannels.close();
+		close.awaitUninterruptibly();
+
+		logger.info("tcp server stopped");
 	}
 
 	public void putWaiting(Channel channel) {
-		awaiting.add(channel);
+		anonymousChannels.add(channel);
 	}
 
-	public void authenticate(int channelId, String playerName) {
-		Channel chan = awaiting.find(channelId);
-		awaiting.remove(chan);
-		allChannels.add(chan);
-		// create new player
-		PlayerObject player = new PlayerObject();
-		player.setPlayerName(playerName);
-		player.setChannelId(channelId);
-		// add to chatroom
-		chatRoom.addPlayer(channelId, player);
-		sendTo(channelId, new PlayersInRoom(chatRoom.getPlayers()));
-		sendSome(new PlayerConnected(player, channelId), new int[] { channelId });
-	}
-
-	public void sendTo(int playerId, Message message) {
-		Channel channel = allChannels.find(playerId);
+	public void sendToPlayer(int playerId, Message message) {
+		Channel channel = authenticatedChannels.find(playerId);
 		if (channel != null) {
 			channel.write(message);
 		}
 	}
 
-	public void sendAll(Message message) {
-		sendSome(message, new int[] {});
+	public void sendToAll(Message message) {
+		Object[] chanArray = authenticatedChannels.toArray();
+
+		for (Object o : chanArray) {
+			Channel chan = (Channel) o;
+			chan.write(message);
+		}
 	}
 
-	public void sendSome(Message message, int[] exclude) {
-		Object[] chanArray = allChannels.toArray();
-		for (Object o : chanArray) {
-			Channel c = (Channel)o;
-			boolean ok = true;
-			for (int i : exclude) {
-				if (c.getId() == i) {
-					ok = false;
-					break;
-				}
-				if (ok) {
-					c.write(message);
-				}
+	public void sendToSome(Message message, int[] channelIds) {
+		for (int i : channelIds) {
+			Channel c = null;
+			if ((c = authenticatedChannels.find(c.getId())) != null) {
+				c.write(message);
 			}
 		}
 	}
-	
-	public void removePlayer(int playerId){
-		chatRoom.removePlayer(playerId);
-		
+
+	public void onApplicationEvent(PlayerConnectedEvent event) {
+		anonymousChannels.add(event.getChannel());
+		logger.info("anonumous player added");
 	}
 }

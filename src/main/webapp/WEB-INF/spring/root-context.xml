@@ -2,7 +2,50 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
-	
+
 	<!-- Root Context: defines shared resources visible to all other web components -->
-		
+	<bean id="playerManager" class="org.games.onlie.player.PlayerManager">
+		<constructor-arg name="playerIdPlayerMap" ref="hashMap" />
+		<constructor-arg name="channelIdPlayerIdMap" ref="hashMap2" />
+	</bean>
+
+	<bean id="hashMap" class="java.util.HashMap" />
+	<bean id="hashMap2" class="java.util.HashMap" />
+
+
+	<bean id="gameServer" class="org.games.online.tcpservice.server.GameServer" init-method="start" destroy-method="stop">
+		<constructor-arg index="0" ref="serverSocketChannelFactory" />
+		<constructor-arg index="1" ref="channelPipelineFactory" />
+		<constructor-arg index="2" ref="channelGroupAuth" />
+		<constructor-arg index="3" ref="channelGroupAnon" />
+		<constructor-arg index="4" ref="serverBootstrap" />
+	</bean>
+
+	<bean id="serverSocketChannelFactory"
+		class="org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory">
+		<constructor-arg index="0">
+			<bean class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
+		</constructor-arg>
+		<constructor-arg index="1">
+			<bean class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
+		</constructor-arg>
+	</bean>
+
+	<bean id="channelPipelineFactory"
+		class="org.games.online.tcpservice.server.GameServerPipelineFactory" />
+
+	<bean id="channelGroupAuth" class="org.jboss.netty.channel.group.DefaultChannelGroup">
+		<constructor-arg value="authGroup" />
+	</bean>
+
+	<bean id="channelGroupAnon" class="org.jboss.netty.channel.group.DefaultChannelGroup">
+		<constructor-arg value="anonGroup" />
+	</bean>
+
+	<bean id="serverBootstrap" class="org.jboss.netty.bootstrap.ServerBootstrap">
+		<constructor-arg ref="serverSocketChannelFactory" />
+	</bean>
+
 </beans>
+
+

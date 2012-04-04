@@ -2,6 +2,7 @@
 <%@page import="org.springframework.security.core.userdetails.*"%>
 <%@page import="org.springframework.security.core.session.SessionRegistry" %>
 <%@page import="java.util.*"%>
+<%@page import="org.games.onlie.player.*" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@page session="true" %>
 <html>
@@ -26,10 +27,9 @@
 	<P>The time on the server is ${serverTime}.</P>
 	
 	<%
-		SessionRegistry registry = 	(SessionRegistry)request.getAttribute("registry");
-		out.println("registry object is: "+registry.toString());
-		out.println("session id: "+request.getSession().getId());
-		out.println("session information: "+registry.getSessionInformation(request.getSession().getId())); 
+		Object factory = request.getAttribute("factory");
+		out.println(factory.getClass());
 	%>
+	
 </body>
 </html>

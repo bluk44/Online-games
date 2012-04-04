@@ -2,21 +2,23 @@ package org.games.onlie;
 
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
+import org.games.onlie.player.Player;
+import org.games.onlie.player.PlayerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+
+import foo.FakeChannel;
 
 /**
  * Handles requests for the application home page.
@@ -54,16 +56,18 @@ public class HomeController implements ApplicationContextAware{
 		}
 		model.addAttribute("username", username);
 		
-		SessionRegistryImpl registry = (SessionRegistryImpl)applicationContext.getParent().getBean("sessionRegistry");
+		PlayerManager manager = (PlayerManager) applicationContext.getBean("playerManager");
+		Player p1 = new Player();
+		FakeChannel channel = new FakeChannel();
+		channel.setChannelId(1024);
+		p1.setName("Hitler");
+		p1.setPlayerId(88);
+		p1.setChannel(channel);
+		manager.putPlayer(p1);
+		model.addAttribute("playerManager", manager);
 		
-		model.addAttribute("registry", registry);
-		System.out.println("session registry object: "+registry);
-		List allPrincips = registry.getAllPrincipals();
-		
-		System.out.println(allPrincips.size());
-		for(Object o : allPrincips){
-			System.out.println(o);
-		}
+		Object serverSocketChannelFactory = applicationContext.getBean("serverSocketChannelFactory");
+		model.addAttribute("factory", serverSocketChannelFactory);
 		
 		return "home";
 	}
