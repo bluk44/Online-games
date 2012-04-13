@@ -81,7 +81,17 @@ public class GameServer implements ApplicationListener<PlayerConnectedEvent> {
 	public void putWaiting(Channel channel) {
 		anonymousChannels.add(channel);
 	}
-
+	
+	public void putAuhtenticated(int channelId){
+		Channel chan = anonymousChannels.find(channelId);
+		anonymousChannels.remove(chan);
+		authenticatedChannels.add(chan);
+	}
+	
+	public Channel getAuthenticatedChannel(int channelId){
+		return authenticatedChannels.find(channelId);
+	}
+	
 	public void sendToPlayer(int playerId, Message message) {
 		Channel channel = authenticatedChannels.find(playerId);
 		if (channel != null) {

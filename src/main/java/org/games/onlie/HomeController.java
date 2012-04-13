@@ -45,30 +45,30 @@ public class HomeController implements ApplicationContextAware{
 		String formattedDate = dateFormat.format(date);
 		
 		model.addAttribute("serverTime", formattedDate);
-		
-		Object principal = SecurityContextHolder.getContext()
-				.getAuthentication().getPrincipal();
-		String username = null;
-		if (principal instanceof UserDetails) {
-			username = ((UserDetails) principal).getUsername();
-		} else {
-			username = principal.toString();
-		}
-		model.addAttribute("username", username);
-		
-		PlayerManager manager = (PlayerManager) applicationContext.getBean("playerManager");
-		Player p1 = new Player();
-		FakeChannel channel = new FakeChannel();
-		channel.setChannelId(1024);
-		p1.setName("Hitler");
-		p1.setPlayerId(88);
-		p1.setChannel(channel);
-		manager.putPlayer(p1);
-		model.addAttribute("playerManager", manager);
-		
-		Object serverSocketChannelFactory = applicationContext.getBean("serverSocketChannelFactory");
-		model.addAttribute("factory", serverSocketChannelFactory);
-		
+//		
+//		Object principal = SecurityContextHolder.getContext()
+//				.getAuthentication().getPrincipal();
+//		String username = null;
+//		if (principal instanceof UserDetails) {
+//			username = ((UserDetails) principal).getUsername();
+//		} else {
+//			username = principal.toString();
+//		}
+//		model.addAttribute("username", username);
+//		
+//		PlayerManager manager = (PlayerManager) applicationContext.getBean("playerManager");
+//		Player p1 = new Player();
+//		FakeChannel channel = new FakeChannel();
+//		channel.setChannelId(1024);
+//		p1.setName("Hitler");
+//		p1.setPlayerId(88);
+//		p1.setChannel(channel);
+//		manager.putPlayer(p1);
+//		model.addAttribute("playerManager", manager);
+//		
+//		Object serverSocketChannelFactory = applicationContext.getBean("serverSocketChannelFactory");
+//		model.addAttribute("factory", serverSocketChannelFactory);
+//		
 		return "home";
 	}
 

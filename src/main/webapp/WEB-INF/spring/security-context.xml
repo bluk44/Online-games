@@ -7,7 +7,7 @@
 	<http auto-config="true">
 		<intercept-url pattern="/" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 		<intercept-url pattern="/game" access="ROLE_USER" />
-		<intercept-url pattern="/chuj" access="ROLE_USER" />
+		<intercept-url pattern="/resources/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 		<intercept-url pattern="/**" access="ROLE_USER" />
 		<logout logout-url="/logout" />
 		<session-management>

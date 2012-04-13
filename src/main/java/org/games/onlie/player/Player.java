@@ -1,11 +1,16 @@
 package org.games.onlie.player;
 
+import org.games.online.model.room.Room;
+import org.games.online.model.table.Table;
 import org.jboss.netty.channel.Channel;
 
 public class Player {
 	Channel channel;
 	String name;
 	int playerId;
+	
+	Room room;
+	Table table;
 	
 	public Channel getChannel(){
 		return channel;
@@ -48,6 +53,18 @@ public class Player {
 	@Override
 	public String toString() {
 		return "Player [name=" + name + ", playerId=" + playerId + "]";
+	}
+	public Room getRoom() {
+		return room;
+	}
+	public void setRoom(Room room) {
+		this.room = room;
+	}
+	public Table getTable() {
+		return table;
+	}
+	public void setTable(Table table) {
+		this.table = table;
 	}
 	
 

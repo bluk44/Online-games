@@ -24,12 +24,13 @@ public class GameServerHandler extends SimpleChannelHandler implements
 	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
 		if (e.getMessage() != null) {
 			Message message = (Message) e.getMessage();
-			messageProcessor.processMessage(message);
+			messageProcessor.processMessage(ctx.getChannel().getId(), message);
 		}
 	}
 
 	@Override
 	public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
+		System.out.println(publisher);
 		publisher.publishEvent(new PlayerConnectedEvent(this, e.getChannel()));
 		logger.info("PlayerConnectedEvent channelId: " + e.getChannel().getId());
 	}

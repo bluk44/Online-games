@@ -16,9 +16,9 @@ public class MessageDecoder extends OneToOneDecoder {
 		ChannelBuffer buff = (ChannelBuffer)msg;
 
 		ObjectInputStream in = new ObjectInputStream(new ChannelBufferInputStream(buff));
-		Object object = in.readObject();
+		Object obj = in.readObject();
 
-		return object;
+		return obj;
 	}
 
 }

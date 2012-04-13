@@ -5,15 +5,8 @@
 <title>my game</title>
 </head>
 <body>
-	game applet
-	<%
-	Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-	if (principal instanceof UserDetails) {
-		  String username = ((UserDetails)principal).getUsername();
-		  out.println(username);
-		} else {
-		  String username = principal.toString();
-		}
-	%>
+	game applet mothefucka<P>
+	<applet width="400" height="300" codebase="./resources" archive="game.jar" code="applet/gui/MainClass.class">
+
 </body>
 </html>
