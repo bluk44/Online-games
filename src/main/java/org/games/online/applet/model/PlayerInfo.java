@@ -1,6 +1,10 @@
 package org.games.online.applet.model;
 
-public class PlayerInfo {
+import java.io.Serializable;
+
+import org.games.onlie.player.Player;
+
+public class PlayerInfo implements Serializable{
 	
 	int playerId;
 	String playerName;
@@ -9,7 +13,8 @@ public class PlayerInfo {
 	TableInfo refTable;
 	
 	public PlayerInfo(){}
-	public PlayerInfo(int playerId, String playerName, RoomInfo refRoom, TableInfo refTable){
+	
+	public PlayerInfo(int playerId, String playerName){
 		this.playerId = playerId;
 		this.playerName = playerName;
 	}

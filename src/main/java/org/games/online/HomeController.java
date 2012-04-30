@@ -1,4 +1,4 @@
-package org.games.onlie;
+package org.games.online;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -30,7 +30,6 @@ public class HomeController implements ApplicationContextAware{
 	
 	private static final Logger logger = LoggerFactory
 			.getLogger(HomeController.class);
-
 	/**
 	 * Simply selects the home view to render by returning its name.
 	 */

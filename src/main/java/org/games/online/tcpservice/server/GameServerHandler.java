@@ -19,7 +19,11 @@ public class GameServerHandler extends SimpleChannelHandler implements
 	private MessageProcessor messageProcessor;
 	private Logger logger = Logger.getLogger(getClass());
 	private ApplicationEventPublisher publisher;
-
+	
+	public void setMessageProcessor(MessageProcessor messageProcessor){
+		this.messageProcessor = messageProcessor;
+	}
+	
 	@Override
 	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
 		if (e.getMessage() != null) {

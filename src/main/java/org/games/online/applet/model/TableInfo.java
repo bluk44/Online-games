@@ -1,29 +1,32 @@
 package org.games.online.applet.model;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Collection;
 
-public class TableInfo {
+import org.games.onlie.player.Player;
+import org.games.online.model.table.Table;
+
+public class TableInfo implements Serializable{
 	int tableId;
-	Collection<PlayerInfo> playersInRoom;
+	Collection<Integer> playerIds;
+	RoomInfo roomRef;
 	
-	public TableInfo(){
-		tableId = 0;
-		playersInRoom = new ArrayList<PlayerInfo>();
-	}
-	
-	public TableInfo(Collection<PlayerInfo> playersInRoom, int tableId){
-		this.playersInRoom = playersInRoom;
+	public TableInfo(int tableId, Collection<Integer> playerIds){
 		this.tableId = tableId;
+		this.playerIds = playerIds;
+	}
+
+	public void setRoomRef(RoomInfo roomRef) {
+		this.roomRef = roomRef;
+	}
+
+	public RoomInfo getRoomRef(){
+		return roomRef;
 	}
 	
 	@Override
 	public String toString() {
-		String string = "" + tableId + ": ";
-		for(PlayerInfo i : playersInRoom){
-			string = string + i.toString() + " ";
-		}
-		return string;
+		return "" + tableId;
 	}
-	
+
 }

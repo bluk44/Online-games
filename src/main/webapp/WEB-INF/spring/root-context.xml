@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
 	<!-- Root Context: defines shared resources visible to all other web components -->
-	<bean id="playerManager" class="org.games.onlie.player.PlayerManager">
-		<constructor-arg name="playerIdPlayerMap" ref="hashMap" />
-		<constructor-arg name="channelIdPlayerIdMap" ref="hashMap2" />
-	</bean>
 
-	<bean id="hashMap" class="java.util.HashMap" />
-	<bean id="hashMap2" class="java.util.HashMap" />
 
 
 	<bean id="gameServer" class="org.games.online.tcpservice.server.GameServer"
@@ -40,7 +35,11 @@
 		</property>
 	</bean>
 
-
+	<bean id="gameServerHandler" class="org.games.online.tcpservice.server.GameServerHandler">
+		<property name="messageProcessor" >
+			<ref bean="messageProcessor"/>
+		</property>
+	</bean>
 
 	<bean id="channelGroupAuth" class="org.jboss.netty.channel.group.DefaultChannelGroup">
 		<constructor-arg value="authGroup" />
@@ -53,6 +52,19 @@
 	<bean id="serverBootstrap" class="org.jboss.netty.bootstrap.ServerBootstrap">
 		<constructor-arg ref="serverSocketChannelFactory" />
 	</bean>
+	
+	<bean id="messageProcessor"
+		class="org.games.online.message.MessageProcessor">
+		<property name="gameServer">
+			<ref bean="gameServer"/>
+		</property>
+		<property name="facade">
+			<ref bean="facade"/>
+		</property>
+	</bean>
+	
+	<bean id="facade" class="org.games.online.model.game.BuissnessModelFacade"/>
+	
 </beans>
 
 
