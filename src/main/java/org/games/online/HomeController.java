@@ -4,8 +4,8 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import org.games.onlie.player.Player;
-import org.games.onlie.player.PlayerManager;
+import org.games.online.model.player.Player;
+import org.games.online.model.player.PlayerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;

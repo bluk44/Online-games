@@ -13,7 +13,7 @@ public class ChannelMock implements Channel {
 	
 	int channelId;
 	
-	ChannelMock(int channelId){
+	public ChannelMock(int channelId){
 		this.channelId = channelId;
 	}
 

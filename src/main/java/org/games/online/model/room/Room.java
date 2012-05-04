@@ -2,12 +2,14 @@ package org.games.online.model.room;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.games.onlie.player.Player;
 import org.games.online.applet.model.PlayerInfo;
 import org.games.online.applet.model.RoomInfo;
 import org.games.online.applet.model.TableInfo;
 import org.games.online.model.game.Game;
+import org.games.online.model.player.Player;
 import org.games.online.model.table.Table;
 
 public class Room {
@@ -23,11 +25,11 @@ public class Room {
 		}
 		this.roomName = roomName;
 		players = new ArrayList<Player>();
-		tables = new ArrayList<Table>();
+		tableMap = new HashMap<Integer, Table>();
 	}
 	
 	Collection<Player> players;
-	Collection<Table> tables;
+	Map<Integer, Table> tableMap;
 	
 	public void removePlayer(Player player){
 		players.remove(player);
@@ -44,6 +46,23 @@ public class Room {
 		player.setRoom(this);
 	}
 	
+	public Collection<Player> getPlayers(){
+		return players;
+	}
+	
+	public void createNewTable(){
+			Table table = new Table();
+			tableMap.put(table.getId(), table);
+	}
+	
+	public Table destroyTable(int tableId){
+			return tableMap.remove(tableId);
+	}
+	
+	public Table getTable(int tableId){
+		return tableMap.get(tableId);
+	}
+	
 	public RoomInfo generateRoomInfo(){
 		Collection<PlayerInfo> playersInfo = new ArrayList<PlayerInfo>();
 		for (Player p : players) {
@@ -52,6 +71,8 @@ public class Room {
 		}
 		
 		Collection<TableInfo> tablesInfo = new ArrayList<TableInfo>();
+		Collection<Table> tables = tableMap.values();
+		
 		for (Table t : tables) {
 			Collection<Integer> playerIds = new ArrayList<Integer>();
 			Collection<Player> playersInTable = t.getPlayers();
@@ -66,24 +87,8 @@ public class Room {
 		return roomInfo;
 	}
 	
-	public void addTable(Table table){
-		tables.add(table);
-	}
-	
-	public void removeTable(Table table){
-		tables.remove(table);
-	}
-	
-	public Collection<Player> getPlayers(){
-		return players;
-	}
-
 	public int getRoomId() {
 		return roomId;
-	}
-
-	public void setRoomId(int roomId) {
-		this.roomId = roomId;
 	}
 
 	public String getRoomName() {
@@ -102,18 +107,10 @@ public class Room {
 		this.game = game;
 	}
 
-	public Collection<Table> getTables() {
-		return tables;
-	}
-
-	public void setTables(Collection<Table> tables) {
-		this.tables = tables;
-	}
 
 	@Override
 	public String toString() {
 		return "Room [roomId=" + roomId + ", roomName=" + roomName + "]";
 	}
 	
-
 }

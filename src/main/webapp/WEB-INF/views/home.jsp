@@ -2,7 +2,7 @@
 <%@page import="org.springframework.security.core.userdetails.*"%>
 <%@page import="org.springframework.security.core.session.SessionRegistry" %>
 <%@page import="java.util.*"%>
-<%@page import="org.games.onlie.player.*" %>
+<%@page import="org.games.online.model.player.*" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@page session="true" %>
 <html>

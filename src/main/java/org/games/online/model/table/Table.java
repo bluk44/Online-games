@@ -3,7 +3,7 @@ package org.games.online.model.table;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.games.onlie.player.Player;
+import org.games.online.model.player.Player;
 import org.games.online.model.room.Room;
 
 public class Table {
@@ -26,9 +26,13 @@ public class Table {
 	public Collection<Player> getPlayers() {
 		return players;
 	}
-		
+	
+	public void addPlayer(Player player){
+		players.add(player);
+	}
+	
 	public void removePlayer(Player player){
 		players.remove(player);
-		player.setRoom(null);
+		player.setTable(null);
 	}
 }
