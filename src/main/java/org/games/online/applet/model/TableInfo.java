@@ -3,7 +3,7 @@ package org.games.online.applet.model;
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.games.onlie.player.Player;
+import org.games.online.model.player.Player;
 import org.games.online.model.table.Table;
 
 public class TableInfo implements Serializable{

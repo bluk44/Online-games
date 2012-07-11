@@ -6,7 +6,7 @@
 </head>
 <body>
 	game applet mothefucka<P>
-	<applet width="400" height="300" codebase="./resources" archive="game.jar" code="applet/gui/MainClass.class">
+	<applet width="722" height="562" codebase="./resources" archive="game.jar" code="org/games/online/applet/gui/MainClass.class">
 
 </body>
 </html>

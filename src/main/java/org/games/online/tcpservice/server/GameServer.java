@@ -43,7 +43,7 @@ public class GameServer implements ApplicationListener<PlayerConnectedEvent> {
 	 */
 	protected ServerBootstrap serverBootstrap;
 
-	protected Logger logger = Logger.getLogger("chuj");
+	protected Logger logger = Logger.getLogger(this.getClass());
 
 	public GameServer(ChannelFactory channelFactory,
 			ChannelPipelineFactory channelPipelineFactory,
@@ -65,6 +65,7 @@ public class GameServer implements ApplicationListener<PlayerConnectedEvent> {
 
 		serverChannel = serverBootstrap.bind(new InetSocketAddress(port));
 		logger.info("starting tcp server on port " + port);
+		System.out.println("starting tcp server on port " + port);
 	}
 
 	public void stop() {
@@ -92,8 +93,8 @@ public class GameServer implements ApplicationListener<PlayerConnectedEvent> {
 		return authenticatedChannels.find(channelId);
 	}
 	
-	public void sendToPlayer(int playerId, Message message) {
-		Channel channel = authenticatedChannels.find(playerId);
+	public void sendToChannel(int channelId, Message message) {
+		Channel channel = authenticatedChannels.find(channelId);
 		if (channel != null) {
 			channel.write(message);
 		}

@@ -12,12 +12,17 @@ import org.games.online.applet.events.ChannelExceptionEvent;
 import org.games.online.applet.events.ChannelExceptionEventListener;
 import org.games.online.applet.events.ConnectedEvent;
 import org.games.online.applet.events.ConnectedEventListener;
+import org.games.online.applet.events.ConnectionFailedEvent;
+import org.games.online.applet.events.ConnectionFailedEventListener;
 import org.games.online.applet.events.DisconnectedEvent;
 import org.games.online.applet.events.DisconnectedEventListener;
 import org.games.online.applet.events.Event;
 import org.games.online.applet.events.EventListener;
+import org.games.online.applet.events.SomeEvent;
+import org.games.online.applet.events.SomeEventListener;
 import org.games.online.applet.model.RoomInfo;
 import org.games.online.message.ChangeRoomMessage;
+import org.games.online.message.HelloMessage;
 import org.games.online.message.PlayerAuthenticationData;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -109,13 +114,13 @@ public class Client {
 		channelFuture.awaitUninterruptibly();
 		if (!channelFuture.isSuccess()) {
 			channelFuture.getCause().printStackTrace();
-			// logger.error(name + ": connection failed");
-			System.out.println("connection failed");
+			eventOccurred(ConnectionFailedEventListener.class,
+					new ConnectionFailedEvent());
 		}
+
 		channel = channelFuture.getChannel();
 		eventOccurred(ConnectedEventListener.class, new ConnectedEvent());
 		sendAuthenticationData();
-		sendChangeRoomData();
 	}
 
 	/**
@@ -144,31 +149,36 @@ public class Client {
 				throws Exception {
 			eventOccurred(ChannelExceptionEventListener.class,
 					new ChannelExceptionEvent());
-			super.exceptionCaught(ctx, e);
 		}
-		
+
 		@Override
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 				throws Exception {
-				if(e.getMessage() instanceof RoomInfo){
-					ChangedRoomEvent event = new ChangedRoomEvent();
-					event.setRoomInfo((RoomInfo)e.getMessage());
-					eventOccurred(ChangedRoomEventListener.class, event);
-				}
+			if (e.getMessage() instanceof RoomInfo) {
+				ChangedRoomEvent event = new ChangedRoomEvent();
+				event.setRoomInfo((RoomInfo) e.getMessage());
+				eventOccurred(ChangedRoomEventListener.class, event);
+			} else if (e.getMessage() instanceof HelloMessage) {
+				eventOccurred(SomeEventListener.class, new SomeEvent("HELLO"));
+			}
 		}
 	}
-	
-	void sendAuthenticationData(){
+
+	void sendAuthenticationData() {
 		PlayerAuthenticationData message = new PlayerAuthenticationData();
 		message.setPlayerName(name);
 		message.setSessionId("0");
 		channel.write(message);
 	}
-	
-	void sendChangeRoomData(){
+
+	void sendChangeRoomData() {
 		ChangeRoomMessage message = new ChangeRoomMessage();
 		message.setRoomId(0);
 		channel.write(message);
 	}
-	
+
+	@Override
+	public String toString() {
+		return "client " + id + "\n";
+	}
 }

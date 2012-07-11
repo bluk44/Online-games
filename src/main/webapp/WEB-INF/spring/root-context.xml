@@ -6,7 +6,17 @@
 
 	<!-- Root Context: defines shared resources visible to all other web components -->
 
-
+	<bean id="messageProcessor" class="org.games.online.message.MessageProcessor">
+		<property name="gameServer">
+			<ref bean="gameServer" />
+		</property>
+		<property name="playerManager">
+			<ref bean="playerManager" />
+		</property>
+		<property name="roomManager">
+			<ref bean="roomManager" />
+		</property>
+	</bean>
 
 	<bean id="gameServer" class="org.games.online.tcpservice.server.GameServer"
 		init-method="start" destroy-method="stop">
@@ -30,7 +40,7 @@
 	<bean id="channelPipelineFactory"
 		class="org.games.online.tcpservice.server.GameServerPipelineFactory">
 		<property name="gameServerHandler">
-			<bean class="org.games.online.tcpservice.server.GameServerHandler" />
+			<ref bean="gameServerHandler"/>
 		</property>
 	</bean>
 
@@ -52,22 +62,13 @@
 		<constructor-arg ref="serverSocketChannelFactory" />
 	</bean>
 
-	<bean id="messageProcessor" class="org.games.online.message.MessageProcessor">
-		<property name="gameServer">
-			<ref bean="gameServer" />
-		</property>
-		<property name="playerManager">
-			<ref bean="playerManager" />
-		</property>
-		<property name="roomManager">
-			<ref bean="roomManager" />
-		</property>
-	</bean>
-
 	<bean id="playerManager" class="org.games.online.model.player.PlayerManager" />
 
 	<bean id="roomManager" class="org.games.online.model.room.RoomManager" />
-
+	
+	<!-- test server -->
+	
+	<bean id="testServer" class="org.games.online.tcpservice.server.TestServer" init-method="start"/>
 </beans>
 
 

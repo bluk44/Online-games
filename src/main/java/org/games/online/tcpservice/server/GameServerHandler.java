@@ -34,7 +34,7 @@ public class GameServerHandler extends SimpleChannelHandler implements
 
 	@Override
 	public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
-		System.out.println(publisher);
+		System.out.println("channel connected");
 		publisher.publishEvent(new PlayerConnectedEvent(this, e.getChannel()));
 		logger.info("PlayerConnectedEvent channelId: " + e.getChannel().getId());
 	}

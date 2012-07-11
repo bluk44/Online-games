@@ -58,6 +58,7 @@ public class MessageProcessor {
 		if (authSuccessfull) {
 
 			gameServer.putAuhtenticated(channelId);
+			gameServer.sendToChannel(channelId, new HelloMessage());
 			Player newPlayer = new Player();
 			newPlayer.setChannel(gameServer.getAuthenticatedChannel(channelId));
 			newPlayer.setName(authData.playerName);

@@ -2,7 +2,7 @@ package org.games.online.applet.model;
 
 import java.io.Serializable;
 
-import org.games.onlie.player.Player;
+import org.games.online.model.player.Player;
 
 public class PlayerInfo implements Serializable{
 	
