@@ -1,39 +1,19 @@
 package org.games.online.applet.client;
 
-import java.net.InetSocketAddress;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
 
-import org.apache.log4j.Logger;
-import org.games.online.applet.events.ChangedRoomEvent;
-import org.games.online.applet.events.ChangedRoomEventListener;
-import org.games.online.applet.events.ChannelExceptionEvent;
-import org.games.online.applet.events.ChannelExceptionEventListener;
-import org.games.online.applet.events.ConnectedEvent;
-import org.games.online.applet.events.ConnectedEventListener;
-import org.games.online.applet.events.ConnectionFailedEvent;
-import org.games.online.applet.events.ConnectionFailedEventListener;
 import org.games.online.applet.events.DisconnectedEvent;
 import org.games.online.applet.events.DisconnectedEventListener;
 import org.games.online.applet.events.Event;
 import org.games.online.applet.events.EventListener;
-import org.games.online.applet.events.SomeEvent;
-import org.games.online.applet.events.SomeEventListener;
-import org.games.online.applet.model.RoomInfo;
-import org.games.online.message.ChangeRoomMessage;
-import org.games.online.message.HelloMessage;
-import org.games.online.message.PlayerAuthenticationData;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 
 public class Client {
 
@@ -41,18 +21,14 @@ public class Client {
 	protected int id;
 	protected static int clientCounter = 0;
 
-	protected ChannelFactory channelFactory;
-	protected ClientBootstrap bootstrap;
-	protected ChannelFuture channelFuture;
-	protected Channel channel;
-	protected ChannelBuffer writeBuffer;
-
 	protected List<Object> listenerList = new ArrayList<Object>();
 
-	protected static String DEF_HOSTNAME = "localhost";
-	protected static int DEF_SERVER_PORT = 10000;
-	private Logger logger = Logger.getLogger(getClass());
-
+	protected Socket clientSocket;
+	private ObjectInputStream in;
+	private ObjectOutputStream out;
+	public boolean isConnected = false;
+	public boolean isOutputShutdown = true;
+	public boolean isInputShutdown = true;
 	public Client() {
 		this("bezimienny");
 	}
@@ -96,85 +72,35 @@ public class Client {
 	 * @param port
 	 *            Server port
 	 */
-	public void initConnection(String hostname, int port) {
-		logger.info(name + ": connecting to " + hostname + ":" + port + " ...");
-		channelFactory = new NioClientSocketChannelFactory(
-				Executors.newCachedThreadPool(),
-				Executors.newCachedThreadPool());
+	public void initConnection(String hostname, int port) throws IOException,
+			UnknownHostException {
 
-		bootstrap = new ClientBootstrap(channelFactory);
-		ClientPipelineFactory factory = new ClientPipelineFactory(
-				new ClientChannelHandler());
-		bootstrap.setPipelineFactory(factory);
-		bootstrap.setOption("tcpNoDelay", true);
-		bootstrap.setOption("keepAlive", true);
-
-		channelFuture = bootstrap
-				.connect(new InetSocketAddress(hostname, port));
-		channelFuture.awaitUninterruptibly();
-		if (!channelFuture.isSuccess()) {
-			channelFuture.getCause().printStackTrace();
-			eventOccurred(ConnectionFailedEventListener.class,
-					new ConnectionFailedEvent());
-		}
-
-		channel = channelFuture.getChannel();
-		eventOccurred(ConnectedEventListener.class, new ConnectedEvent());
-		sendAuthenticationData();
-	}
-
-	/**
-	 * Tries to connect to default server
-	 */
-	public void initConnection() {
-		initConnection(DEF_HOSTNAME, DEF_SERVER_PORT);
+		clientSocket = new Socket(hostname, port);
+		InputStream  is  = clientSocket.getInputStream();
+		OutputStream os = clientSocket.getOutputStream();
+	//	ObjectInputStream ois = new ObjectInputStream(is);
+		//clientSocket.getOutputStream();
+//		in = new ObjectInputStream(clientSocket.getInputStream());
+//		out = new ObjectOutputStream(clientSocket.getOutputStream());
+		isConnected = clientSocket.isConnected();
+		isInputShutdown = clientSocket.isInputShutdown();
+		isOutputShutdown = clientSocket.isOutputShutdown();
+//		eventOccurred(ConnectedEventListener.class, new ConnectedEvent());
+//TODO
+//		sendAuthenticationData();
 	}
 
 	/**
 	 * Disconnects from server
+	 * @throws IOException 
 	 */
-	public void closeConnection() {
-		ChannelFuture closeFuture = channel.close();
-
-		closeFuture.awaitUninterruptibly();
-		channelFactory.releaseExternalResources();
-		// logger.info(name + ": dziekuje dobranoc");
-		eventOccurred(DisconnectedEventListener.class, new DisconnectedEvent());
-	}
-
-	class ClientChannelHandler extends SimpleChannelHandler {
-
-		@Override
-		public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
-				throws Exception {
-			eventOccurred(ChannelExceptionEventListener.class,
-					new ChannelExceptionEvent());
+	public void closeConnection() throws IOException {
+		if(isConnected){
+			out.close();
+			in.close();
+			isConnected = false;
+			eventOccurred(DisconnectedEventListener.class, new DisconnectedEvent());
 		}
-
-		@Override
-		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
-				throws Exception {
-			if (e.getMessage() instanceof RoomInfo) {
-				ChangedRoomEvent event = new ChangedRoomEvent();
-				event.setRoomInfo((RoomInfo) e.getMessage());
-				eventOccurred(ChangedRoomEventListener.class, event);
-			} else if (e.getMessage() instanceof HelloMessage) {
-				eventOccurred(SomeEventListener.class, new SomeEvent("HELLO"));
-			}
-		}
-	}
-
-	void sendAuthenticationData() {
-		PlayerAuthenticationData message = new PlayerAuthenticationData();
-		message.setPlayerName(name);
-		message.setSessionId("0");
-		channel.write(message);
-	}
-
-	void sendChangeRoomData() {
-		ChangeRoomMessage message = new ChangeRoomMessage();
-		message.setRoomId(0);
-		channel.write(message);
 	}
 
 	@Override

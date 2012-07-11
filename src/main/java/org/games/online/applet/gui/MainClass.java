@@ -75,7 +75,8 @@ public class MainClass extends javax.swing.JApplet {
 	private JMenu jMenu1;
 	private JList<PlayerInfo> playerInfoList;
 	private JScrollPane listScrollPane;
-
+	
+	private static int DEFAULT_PORT = 10000;
 	/**
 	 * Auto-generated main method to display this JApplet inside a new JFrame.
 	 */
@@ -85,10 +86,10 @@ public class MainClass extends javax.swing.JApplet {
 			SwingUtilities.invokeAndWait(new Runnable() {
 
 				public void run() {
-					//initClient();
+					initClient();
 					initGUI();
-					String host = getCodeBase().getHost();
-					consoleTextArea.append(host+"\n");
+//					String host = getCodeBase().getHost();
+//					consoleTextArea.append(host+"\n");
 //					ChannelFactory channelFactory;
 //					ClientBootstrap bootstrap;
 //					ChannelFuture channelFuture;
@@ -107,7 +108,7 @@ public class MainClass extends javax.swing.JApplet {
 //					bootstrap.setOption("keepAlive", true);
 //
 //					channelFuture = bootstrap
-//							.connect(new InetSocketAddress("localhost", 10000));
+//							.connect(new InetSocketAddress(host, 10000));
 //					consoleTextArea.append("after connect\n");
 //					channelFuture.awaitUninterruptibly();
 //					consoleTextArea.append("after await\n");
@@ -117,16 +118,16 @@ public class MainClass extends javax.swing.JApplet {
 //						consoleTextArea.append("connection success\n");
 //					}
 //					
-					try {
-						Socket clientSocket = new Socket(host, 10000);
-						if(clientSocket.isConnected()){
-							consoleTextArea.append("connected\n");
-						}
-						} catch (UnknownHostException e) {
-							consoleTextArea.append("UnknownHostException\n");
-					} catch (IOException e) {
-						consoleTextArea.append("IOException\n");
-					}
+//					try {
+//						Socket clientSocket = new Socket(host, 10000);
+//						if(clientSocket.isConnected()){
+//							consoleTextArea.append("connected\n");
+//						}
+//						} catch (UnknownHostException e) {
+//							consoleTextArea.append("UnknownHostException\n");
+//					} catch (IOException e) {
+//						consoleTextArea.append("IOException\n");
+//					}
 				}
 
 			});
@@ -183,7 +184,19 @@ public class MainClass extends javax.swing.JApplet {
 						MenuItemConnect.setText("Connect");
 						MenuItemConnect.addMouseListener(new MouseAdapter() {
 							public void mousePressed(MouseEvent evt) {
-								client.initConnection();
+								try {
+									client.initConnection(getCodeBase().getHost(),DEFAULT_PORT);
+									if(client.isConnected){
+										print("connected");
+										print(""+client.isInputShutdown);
+										print(""+client.isOutputShutdown);
+									}
+									
+								} catch (UnknownHostException e) {
+									print("unknown host: "+getCodeBase().getHost());
+								} catch (IOException e) {
+									print("Couldn't get I/O for the connection to: "+getCodeBase().getHost());
+								}
 							}
 						});
 					}
@@ -193,7 +206,11 @@ public class MainClass extends javax.swing.JApplet {
 						MenuItemDisconnect.setText("Disconnect");
 						MenuItemDisconnect.addMouseListener(new MouseAdapter() {
 							public void mousePressed(MouseEvent evt) {
-								client.closeConnection();
+								try {
+									client.closeConnection();
+								} catch (IOException e) {
+									print("I/O exception closing connection");
+								}
 							}
 						});
 					}
@@ -317,5 +334,7 @@ public class MainClass extends javax.swing.JApplet {
 			}
 		});
 	}
-
+	private void print(String msg){
+		consoleTextArea.append(msg+"\n");
+	}
 }
