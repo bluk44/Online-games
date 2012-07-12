@@ -20,11 +20,9 @@
 
 	<bean id="gameServer" class="org.games.online.tcpservice.server.GameServer"
 		init-method="start" destroy-method="stop">
-		<constructor-arg index="0" ref="serverSocketChannelFactory" />
-		<constructor-arg index="1" ref="channelPipelineFactory" />
-		<constructor-arg index="2" ref="channelGroupAuth" />
-		<constructor-arg index="3" ref="channelGroupAnon" />
-		<constructor-arg index="4" ref="serverBootstrap" />
+		<constructor-arg index="0" ref="serverBootstrap" />		
+		<constructor-arg index="1" ref="channelGroupAuth" />
+		<constructor-arg index="2" ref="channelGroupAnon" />
 	</bean>
 
 	<bean id="serverSocketChannelFactory"
@@ -60,6 +58,9 @@
 
 	<bean id="serverBootstrap" class="org.jboss.netty.bootstrap.ServerBootstrap">
 		<constructor-arg ref="serverSocketChannelFactory" />
+		<property name="pipelineFactory">
+			<ref bean="channelPipelineFactory"/>
+		</property>
 	</bean>
 
 	<bean id="playerManager" class="org.games.online.model.player.PlayerManager" />

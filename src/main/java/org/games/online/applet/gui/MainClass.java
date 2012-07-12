@@ -2,7 +2,10 @@ package org.games.online.applet.gui;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -36,13 +39,10 @@ import org.games.online.applet.events.DisconnectedEventListener;
 import org.games.online.applet.events.SomeEvent;
 import org.games.online.applet.events.SomeEventListener;
 import org.games.online.applet.model.PlayerInfo;
-import org.games.online.applet.model.RoomInfo;
 import org.games.online.applet.model.TableInfo;
-import org.games.online.message.HelloMessage;
+import org.games.online.tcpservice.server.TestNettyConnection.ClientChannelHandler;
 import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
@@ -86,9 +86,9 @@ public class MainClass extends javax.swing.JApplet {
 			SwingUtilities.invokeAndWait(new Runnable() {
 
 				public void run() {
-					initClient();
+//					initClient();
 					initGUI();
-//					String host = getCodeBase().getHost();
+					String host = getCodeBase().getHost();
 //					consoleTextArea.append(host+"\n");
 //					ChannelFactory channelFactory;
 //					ClientBootstrap bootstrap;
@@ -120,6 +120,8 @@ public class MainClass extends javax.swing.JApplet {
 //					
 //					try {
 //						Socket clientSocket = new Socket(host, 10000);
+//						InputStream is= clientSocket.getInputStream();
+//						ObjectInputStream b = new ObjectInputStream(is);
 //						if(clientSocket.isConnected()){
 //							consoleTextArea.append("connected\n");
 //						}
@@ -128,6 +130,46 @@ public class MainClass extends javax.swing.JApplet {
 //					} catch (IOException e) {
 //						consoleTextArea.append("IOException\n");
 //					}
+//					ClientBootstrap bootstrap = new ClientBootstrap(
+//							new NioClientSocketChannelFactory(
+//									Executors.newCachedThreadPool(),
+//									Executors.newCachedThreadPool()));
+//					ClientPipelineFactory factory = new ClientPipelineFactory(
+//							new ClientChannelHandler());
+//					
+//					ChannelFuture future = bootstrap.connect(new InetSocketAddress(
+//							host, 10000));
+//
+//					// Wait until the connection attempt succeeds or fails.
+//					Channel channel = future.awaitUninterruptibly().getChannel();
+//					if (!future.isSuccess()) {
+//						print("conection failed");
+//						bootstrap.releaseExternalResources();
+//						return;
+//					}else{
+//						print("connection success");
+//					}
+//					client.initConnection(host, DEFAULT_PORT);
+//					try {
+//						Thread.sleep(3000);
+//					} catch (InterruptedException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//					client.closeConnection();
+//					if(client.isConnected){
+//						print("connection successful");
+//					}else{
+//						print("connection failed");
+//					}
+//					try {
+//						Thread.sleep(5000);
+//					} catch (InterruptedException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//					ChannelFuture closeFuture = channel.close();
+//					
 				}
 
 			});
@@ -184,19 +226,19 @@ public class MainClass extends javax.swing.JApplet {
 						MenuItemConnect.setText("Connect");
 						MenuItemConnect.addMouseListener(new MouseAdapter() {
 							public void mousePressed(MouseEvent evt) {
-								try {
-									client.initConnection(getCodeBase().getHost(),DEFAULT_PORT);
-									if(client.isConnected){
-										print("connected");
-										print(""+client.isInputShutdown);
-										print(""+client.isOutputShutdown);
-									}
-									
-								} catch (UnknownHostException e) {
-									print("unknown host: "+getCodeBase().getHost());
-								} catch (IOException e) {
-									print("Couldn't get I/O for the connection to: "+getCodeBase().getHost());
-								}
+//								try {
+//									client.initConnection(getCodeBase().getHost(),DEFAULT_PORT);
+//									if(client.isConnected){
+//										print("connected");
+//										print(""+client.isInputShutdown);
+//										print(""+client.isOutputShutdown);
+//									}
+//									
+//								} catch (UnknownHostException e) {
+//									print("unknown host: "+getCodeBase().getHost());
+//								} catch (IOException e) {
+//									print("Couldn't get I/O for the connection to: "+getCodeBase().getHost());
+//								}
 							}
 						});
 					}
@@ -206,11 +248,6 @@ public class MainClass extends javax.swing.JApplet {
 						MenuItemDisconnect.setText("Disconnect");
 						MenuItemDisconnect.addMouseListener(new MouseAdapter() {
 							public void mousePressed(MouseEvent evt) {
-								try {
-									client.closeConnection();
-								} catch (IOException e) {
-									print("I/O exception closing connection");
-								}
 							}
 						});
 					}
@@ -288,7 +325,7 @@ public class MainClass extends javax.swing.JApplet {
 
 					public void eventOccurred(Object source,
 							ConnectedEvent event) {
-						consoleTextArea.append("connected \n");
+							print("connection successful lol");
 						
 					}
 
@@ -298,7 +335,7 @@ public class MainClass extends javax.swing.JApplet {
 
 					public void eventOccurred(Object source,
 							DisconnectedEvent event) {
-						consoleTextArea.append("diss-connected \n");
+						print("disconnected");
 					}
 				});
 		client.addListener(ChannelExceptionEventListener.class,
@@ -322,7 +359,7 @@ public class MainClass extends javax.swing.JApplet {
 			
 			@Override
 			public void eventOccurred(Object source, ConnectionFailedEvent event) {
-				consoleTextArea.append("connection failed \n");				
+				print("connection failed");				
 			}
 		});
 		client.addListener(SomeEventListener.class, new SomeEventListener() {

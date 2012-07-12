@@ -1,19 +1,17 @@
 package org.games.online.applet.client;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
-import org.games.online.applet.events.DisconnectedEvent;
-import org.games.online.applet.events.DisconnectedEventListener;
-import org.games.online.applet.events.Event;
-import org.games.online.applet.events.EventListener;
+import org.games.online.applet.events.*;
+import org.games.online.tcpservice.server.TestNettyConnection.ClientChannelHandler;
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 
 public class Client {
 
@@ -23,16 +21,14 @@ public class Client {
 
 	protected List<Object> listenerList = new ArrayList<Object>();
 
-	protected Socket clientSocket;
-	private ObjectInputStream in;
-	private ObjectOutputStream out;
 	public boolean isConnected = false;
-	public boolean isOutputShutdown = true;
-	public boolean isInputShutdown = true;
+	private ClientBootstrap bootstrap = null;
+	private Channel channel = null;
+	
 	public Client() {
 		this("bezimienny");
 	}
-
+	
 	public Client(String name) {
 		this.name = name;
 		synchronized (this) {
@@ -72,33 +68,39 @@ public class Client {
 	 * @param port
 	 *            Server port
 	 */
-	public void initConnection(String hostname, int port) throws IOException,
-			UnknownHostException {
+	public void initConnection(String hostname, int port) {
+		bootstrap = new ClientBootstrap(
+				new NioClientSocketChannelFactory(
+						Executors.newCachedThreadPool(),
+						Executors.newCachedThreadPool()));
+		ClientPipelineFactory factory = new ClientPipelineFactory(
+				new ClientChannelHandler());
+		
+		ChannelFuture future = bootstrap.connect(new InetSocketAddress(
+				hostname, 10000));
 
-		clientSocket = new Socket(hostname, port);
-		InputStream  is  = clientSocket.getInputStream();
-		OutputStream os = clientSocket.getOutputStream();
-	//	ObjectInputStream ois = new ObjectInputStream(is);
-		//clientSocket.getOutputStream();
-//		in = new ObjectInputStream(clientSocket.getInputStream());
-//		out = new ObjectOutputStream(clientSocket.getOutputStream());
-		isConnected = clientSocket.isConnected();
-		isInputShutdown = clientSocket.isInputShutdown();
-		isOutputShutdown = clientSocket.isOutputShutdown();
-//		eventOccurred(ConnectedEventListener.class, new ConnectedEvent());
-//TODO
-//		sendAuthenticationData();
+		// Wait until the connection attempt succeeds or fails.
+		channel = future.awaitUninterruptibly().getChannel();
+		if (!future.isSuccess()) {
+			isConnected = false;
+			eventOccurred(ConnectionFailedEventListener.class, new ConnectionFailedEvent());
+		} else {
+			isConnected = true;
+			eventOccurred(ConnectedEventListener.class, new ConnectedEvent());
+		}
 	}
 
 	/**
 	 * Disconnects from server
-	 * @throws IOException 
+	 * 
+	 * @throws IOException
 	 */
-	public void closeConnection() throws IOException {
-		if(isConnected){
-			out.close();
-			in.close();
-			isConnected = false;
+	public void closeConnection(){
+		if (isConnected) {
+			eventOccurred(DisconnectedEventListener.class, new DisconnectedEvent());
+			ChannelFuture channelFuture = channel.close();
+			channelFuture.awaitUninterruptibly();
+			bootstrap.releaseExternalResources();
 			eventOccurred(DisconnectedEventListener.class, new DisconnectedEvent());
 		}
 	}

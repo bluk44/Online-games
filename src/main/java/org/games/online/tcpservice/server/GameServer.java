@@ -1,6 +1,7 @@
 package org.games.online.tcpservice.server;
 
 import java.net.InetSocketAddress;
+import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 import org.games.online.events.PlayerConnectedEvent;
@@ -24,12 +25,12 @@ public class GameServer implements ApplicationListener<PlayerConnectedEvent> {
 	 * a factory which creates and manages channels and it's resources processes
 	 * all I/O requests and performs I/O to generate ChannelEvents
 	 */
-	protected ChannelFactory channelFactory;
+	// protected ChannelFactory channelFactory;
 	/**
 	 * Whenever a new connection is accepted by the server, a new
 	 * ChannelPipeline will be created by the specified ChannelPipelineFactory.
 	 */
-	protected ChannelPipelineFactory channelPipelineFactory;
+	// protected ChannelPipelineFactory channelPipelineFactory;
 	/**
 	 * channel group of logged players
 	 */
@@ -45,21 +46,15 @@ public class GameServer implements ApplicationListener<PlayerConnectedEvent> {
 
 	protected Logger logger = Logger.getLogger(this.getClass());
 
-	public GameServer(ChannelFactory channelFactory,
-			ChannelPipelineFactory channelPipelineFactory,
-			ChannelGroup authenticatedChannels, ChannelGroup anonymousChannels,
-			ServerBootstrap serverBootstrap) {
-		this.channelFactory = channelFactory;
-		this.channelPipelineFactory = channelPipelineFactory;
+	public GameServer(ServerBootstrap serverBootstrap,
+			ChannelGroup authenticatedChannels, ChannelGroup anonymousChannels) {
+		this.serverBootstrap = serverBootstrap;
 		this.authenticatedChannels = authenticatedChannels;
 		this.anonymousChannels = anonymousChannels;
-		this.serverBootstrap = serverBootstrap;
-		
 	}
 
 	public void start() {
 
-		serverBootstrap.setPipelineFactory(channelPipelineFactory);
 		serverBootstrap.setOption("child.tcpNoDelay", true);
 		serverBootstrap.setOption("child.keepAlive", true);
 
@@ -72,27 +67,31 @@ public class GameServer implements ApplicationListener<PlayerConnectedEvent> {
 		logger.info("stopping server");
 		ChannelGroupFuture closeFuture = authenticatedChannels.close();
 		closeFuture.awaitUninterruptibly();
-		channelFactory.releaseExternalResources();
-		ChannelGroupFuture close = anonymousChannels.close();
-		close.awaitUninterruptibly();
-
+		logger.info("authenticated closed");
+		closeFuture = anonymousChannels.disconnect();
+		closeFuture.awaitUninterruptibly();
+		logger.info("all anons disconnected");
+		closeFuture = anonymousChannels.close();
+		closeFuture.awaitUninterruptibly();
+		logger.info("all anons closed");
+		serverBootstrap.releaseExternalResources();
 		logger.info("tcp server stopped");
 	}
 
 	public void putWaiting(Channel channel) {
 		anonymousChannels.add(channel);
 	}
-	
-	public void putAuhtenticated(int channelId){
+
+	public void putAuhtenticated(int channelId) {
 		Channel chan = anonymousChannels.find(channelId);
 		anonymousChannels.remove(chan);
 		authenticatedChannels.add(chan);
 	}
-	
-	public Channel getAuthenticatedChannel(int channelId){
+
+	public Channel getAuthenticatedChannel(int channelId) {
 		return authenticatedChannels.find(channelId);
 	}
-	
+
 	public void sendToChannel(int channelId, Message message) {
 		Channel channel = authenticatedChannels.find(channelId);
 		if (channel != null) {
